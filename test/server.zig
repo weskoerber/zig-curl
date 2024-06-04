@@ -17,13 +17,34 @@ pub fn main() !void {
 
         var request = try server.receiveHead();
 
-        _ = try stdout.write(try std.fmt.bufPrint(&log_buffer, "{s} {s} {s}\n", .{ @tagName(request.head.method), request.head.target, @tagName(request.head.version) }));
+        println(&log_buffer, "{s} {s} {s}", .{
+            @tagName(request.head.method),
+            request.head.target,
+            @tagName(request.head.version),
+        });
+
+        var headers = request.iterateHeaders();
+        while (headers.next()) |header| {
+            println(&log_buffer, "{s}: {s}", .{
+                header.name,
+                header.value,
+            });
+        }
+
+        println(&log_buffer, "", .{});
 
         var buffered_reader = std.io.bufferedReader(try request.reader());
 
-        var fifo = std.fifo.LinearFifo(u8, .Slice).init(&buffered_reader.buf);
+        var fifo = std.fifo.LinearFifo(u8, .{ .Static = 256 }).init();
         try fifo.pump(buffered_reader.reader(), stdout.writer());
+
+        println(&log_buffer, "\n", .{});
 
         try request.respond("{}", .{});
     }
+}
+
+fn println(buf: []u8, comptime fmt: []const u8, args: anytype) void {
+    const str = std.fmt.bufPrint(buf, fmt ++ "\n", args) catch @panic("format error");
+    _ = std.io.getStdOut().write(str) catch @panic("cannot write to stdout");
 }
