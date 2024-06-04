@@ -1,0 +1,15 @@
+.{
+    .name = "zig-curl",
+    .version = "0.0.0",
+    .dependencies = .{},
+    .paths = .{
+        ".gitignore",
+        "build.zig",
+        "build.zig.zon",
+        "examples/",
+        "LICENSE",
+        "README.md",
+        "src/",
+        "test/",
+    },
+}
