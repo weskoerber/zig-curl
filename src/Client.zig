@@ -29,6 +29,10 @@ pub fn send(s: Client, allocator: std.mem.Allocator, r: Request) CurlError!Respo
     try s.setOpt(.{ .url = r.url });
     try s.setOpt(.{ .writedata = &buf });
 
+    if (r.body) |body| {
+        try s.setOpt(.{ .postfields = body });
+    }
+
     try checkError(c.curl_easy_perform(s.handle));
 
     var response_code: c_long = 0;
@@ -44,6 +48,7 @@ pub fn send(s: Client, allocator: std.mem.Allocator, r: Request) CurlError!Respo
 pub fn setOpt(s: Client, o: CurlOpt) CurlError!void {
     try checkError(switch (o) {
         .follow_location => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_FOLLOWLOCATION, &x),
+        .postfields => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_POSTFIELDS, x.ptr),
         .timeout_ms => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_TIMEOUT_MS, x),
         .url => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_URL, x.ptr),
         .useragent => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_USERAGENT, x.ptr),
