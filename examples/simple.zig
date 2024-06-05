@@ -1,5 +1,8 @@
 pub fn main() !void {
-    const allocator = std.heap.c_allocator;
+    // const allocator = std.heap.c_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer if (gpa.deinit() != .ok) @panic("Memory leak");
+    const allocator = gpa.allocator();
 
     // Perform global init
     curl.Global.init();
