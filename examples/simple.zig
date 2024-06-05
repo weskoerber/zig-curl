@@ -1,14 +1,15 @@
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer if (gpa.deinit() != .ok) @panic("memory leak");
-    const allocator = gpa.allocator();
+    const allocator = std.heap.c_allocator;
 
+    // Perform global init
     curl.Global.init();
     defer curl.Global.deinit();
 
+    // Init the client
     const client = try curl.Client.init(.{});
     defer client.deinit();
 
+    // Send a request
     const response = client.send(allocator, .{
         .method = .GET,
         .url = "127.0.0.1:8321",
@@ -18,6 +19,7 @@ pub fn main() !void {
     };
     defer response.deinit();
 
+    // Print the response body
     std.debug.print("{s}\n", .{response.body});
 }
 
