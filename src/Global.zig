@@ -6,5 +6,4 @@ pub fn deinit() void {
     c.curl_global_cleanup();
 }
 
-const util = @import("util.zig");
-const c = util.c;
+const c = @import("cimport.zig").c;

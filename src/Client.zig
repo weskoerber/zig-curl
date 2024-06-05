@@ -87,8 +87,7 @@ pub fn writeFunction(ptr: [*]u8, size: usize, nmemb: usize, userdata: *anyopaque
 const std = @import("std");
 const log = std.log.scoped(.client);
 
-const util = @import("util.zig");
-const c = util.c;
+const c = @import("cimport.zig").c;
 const errors = @import("errors.zig");
 const checkError = errors.checkError;
 const Client = @This();

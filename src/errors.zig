@@ -433,5 +433,4 @@ fn curlCodeFromError(err: CurlError) CurlCode {
 }
 
 const std = @import("std");
-const util = @import("util.zig");
-const c = util.c;
+const c = @import("cimport.zig").c;
