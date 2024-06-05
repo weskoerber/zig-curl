@@ -29,6 +29,23 @@ pub fn send(s: Client, allocator: std.mem.Allocator, r: Request) CurlError!Respo
     try s.setOpt(.{ .url = r.url });
     try s.setOpt(.{ .writedata = &buf });
 
+    var slist: ?*c.curl_slist = null;
+    defer c.curl_slist_free_all(slist);
+    if (r.headers) |headers| {
+        var iter = headers.iterator();
+        while (iter.next()) |header| {
+            const header_str = try std.fmt.allocPrintZ(allocator, "{s}: {s}", .{
+                header.key_ptr.*,
+                header.value_ptr.*,
+            });
+            defer allocator.free(header_str);
+
+            slist = c.curl_slist_append(slist, header_str);
+        }
+
+        try s.setOpt(.{ .headers = slist });
+    }
+
     if (r.body) |body| {
         try s.setOpt(.{ .postfields = body });
     }
@@ -48,6 +65,7 @@ pub fn send(s: Client, allocator: std.mem.Allocator, r: Request) CurlError!Respo
 pub fn setOpt(s: Client, o: CurlOpt) CurlError!void {
     try checkError(switch (o) {
         .follow_location => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_FOLLOWLOCATION, &x),
+        .headers => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_HTTPHEADER, x),
         .postfields => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_POSTFIELDS, x.ptr),
         .timeout_ms => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_TIMEOUT_MS, x),
         .url => |x| c.curl_easy_setopt(s.handle, c.CURLOPT_URL, x.ptr),
@@ -80,6 +98,7 @@ const Response = @import("Response.zig");
 
 const CurlOpt = union(enum) {
     follow_location: bool,
+    headers: ?*c.curl_slist,
     postfields: []const u8,
     readdata: []const u8,
     readfunction: *const fn ([*]u8, usize, usize, *anyopaque) callconv(.C) usize,
